@@ -24,7 +24,14 @@ int main(int argc, char* argv[]) {
     }
     if (!strcmp(argv[1], "add")){
         std::cout << "adding file\n";
-        addFile(argv[2]);
+        std::string filepath = argv[2];
+        std::filesystem::path fsPath(filepath);
+        std::error_code ec;
+        if(std::filesystem::is_regular_file(fsPath, ec)){
+            addFile(filepath);
+        }else if(std::filesystem::is_directory(fsPath, ec)){
+            parseDir(filepath);
+        }
     }
     if(!strcmp(argv[1], "commit")){
         std::cout << "commiting staged files\n";

@@ -103,4 +103,11 @@ void addFile(std::string filepath) {
     }
 }
 
-void parseDir(std::string dirpath) {}
+void parseDir(std::string dirpath) {
+    std::filesystem::recursive_directory_iterator it(dirpath);
+    for(auto entry : it){
+        if(entry.is_regular_file()){
+            addFile(entry.path().string());
+        }
+    }
+}
