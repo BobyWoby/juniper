@@ -3,11 +3,14 @@
 
 #include <cstring>
 #include <iostream>
+#include <string>
 
 #include "add.h"
 #include "init.h"
+#include "commit.h"
 
 int main(int argc, char* argv[]) {
+    srand(time(0));
     // unsigned char * data; // byte pointer
     // std::cout << "Hello World!\n";
     // addFile("../src/main.cpp");
@@ -22,6 +25,16 @@ int main(int argc, char* argv[]) {
     if (!strcmp(argv[1], "add")){
         std::cout << "adding file\n";
         addFile(argv[2]);
+    }
+    if(!strcmp(argv[1], "commit")){
+        std::cout << "commiting staged files\n";
+        std::string msg = "";
+        if(argc >= 2){
+            msg = argv[2];
+        }
+        std::string treeHash = commitIndex();
+        std::string currentCommit = getCurrentCommit();
+        createCommit(treeHash, currentCommit, msg);
     }
     return 0;
 }

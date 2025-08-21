@@ -26,7 +26,7 @@ inline std::vector<std::string> split(std::string str, std::string delim) {
 }
 
 inline std::string randomHash() {
-    srand(time(0));
+    // srand(time(0));
     unsigned char outBuf[20];
     unsigned char inBuf[20];
     for (int i = 0; i < 20; i++) {
@@ -53,11 +53,21 @@ inline std::string getCurrentCommit(){
     std::string line;
     std::getline(head, line);
     std::string loc = line.substr(5, std::string::npos);
+    std::cout << loc << "\n";
     std::ifstream ref(".juniper/" + loc);
     if(!ref.good()){
         //if there isn't currently a head commit, return ""
         return "";
     }
     std::getline(ref, line);
-    return "";
+    return line.substr(4, std::string::npos);
+}
+
+inline void updateHead(std::string newHash){
+    std::ifstream head(".juniper/HEAD");
+    std::string line;
+    std::getline(head, line);
+    std::string loc = line.substr(5, std::string::npos);
+    std::ofstream ref(".juniper/" + loc, std::ios::trunc);
+    ref << "ref " << newHash;
 }

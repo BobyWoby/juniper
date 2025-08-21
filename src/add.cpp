@@ -18,11 +18,10 @@ CompressedFile compressFile(std::string filepath) {
         std::ifstream file(filepath);
 
         while (std::getline(file, line)) {
-            fileStr += line;
+            fileStr += line + "\n";
         }
     }
     unsigned long sizeDataCompressed = strlen(fileStr.c_str()) * 1.1 + 12;
-    std::cout << sizeDataCompressed << "\n";
     // unsigned char *dataCompressed = new unsigned char[sizeDataCompressed]();
     unsigned char *dataCompressed = (unsigned char *)malloc(sizeDataCompressed);
 
@@ -30,6 +29,7 @@ CompressedFile compressFile(std::string filepath) {
     // sourceLen)
     int compressResult = compress(dataCompressed, &sizeDataCompressed,
                                   (Bytef *)fileStr.c_str(), fileStr.length());
+    // 
     switch (compressResult) {
         case Z_OK:
             std::cout << "Compression Success\n";
@@ -75,18 +75,25 @@ void addFile(std::string filepath) {
     while (std::getline(stagingFile, line)) {
         indexVec.push_back(line);
     }
+    int count = 0;
     for (int i = 0; i < indexVec.size(); i++) {
         std::vector<std::string> indexTmp = split(indexVec.at(i), " ");
-        if (indexTmp.at(1) < filepath) {
+        if (indexTmp.at(1) > filepath) {
             indexVec.insert(indexVec.begin() + i, hash + " " + filepath);
             break;
+        }else{
+            count++;
         }
-        // if(indexTmp.at(1) == filepath){
-        //
-        // }
+    }
+    if(count >= indexVec.size()){
+        indexVec.push_back(hash + " " + filepath);
     }
     if (indexVec.size() == 0) {
         indexVec.push_back(hash + " " + filepath);
+    }
+
+    for(auto index : indexVec){
+        std::cout << index << "\n";
     }
     {
         std::ofstream file(".juniper/index", std::ios::trunc);
