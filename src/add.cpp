@@ -7,10 +7,25 @@
 #include <climits>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <random>
 #include <vector>
+
+CompressedFile compressString(const std::string str) {
+    CompressedFile out;
+    uLongf uSize = str.length();
+    uLongf size = compressBound(str.size());
+    Bytef *data = new Bytef[size];
+
+    if (compress(data, &size, (const Bytef *)str.c_str(), uSize) != Z_OK) {
+        std::cerr << "Compression Failure!\n";
+        exit(1);
+    }
+
+    return {.uncompressedSize = uSize, .compressedSize = size, .data = data};
+}
 
 CompressedFile compressFile(std::string filepath) {
     std::string fileStr, line;
@@ -21,33 +36,7 @@ CompressedFile compressFile(std::string filepath) {
             fileStr += line + "\n";
         }
     }
-    unsigned long sizeDataCompressed = strlen(fileStr.c_str()) * 1.1 + 12;
-    // unsigned char *dataCompressed = new unsigned char[sizeDataCompressed]();
-    unsigned char *dataCompressed = (unsigned char *)malloc(sizeDataCompressed);
-
-    // compress(Bytef *dest, uLongf *destLen, const Bytef *source, uLong
-    // sourceLen)
-    int compressResult = compress(dataCompressed, &sizeDataCompressed,
-                                  (Bytef *)fileStr.c_str(), fileStr.length());
-    // 
-    switch (compressResult) {
-        case Z_OK:
-            std::cout << "Compression Success\n";
-            // printf("***** SUCCESS! *****\n");
-            break;
-        case Z_MEM_ERROR:
-            std::cout << "Out of memory!\n";
-            exit(1);  // quit.
-            break;
-
-        case Z_BUF_ERROR:
-            printf("Not enough buffer space!\n");
-            exit(1);  // quit.
-            break;
-    }
-    return {.uncompressedSize = strlen(fileStr.c_str()),
-            .compressedSize = sizeDataCompressed,
-            .data = dataCompressed};
+    return compressString(fileStr);
 }
 
 void addFile(std::string filepath) {
@@ -61,17 +50,25 @@ void addFile(std::string filepath) {
     }
     // strlen(fileStr.c_sr());
     // std::cout << dataCompressed << "\n";
-    std::ofstream blobFile(".juniper/objects/" + hash);
+    std::ofstream blobFile(".juniper/objects/" + hash, std::ios::binary);
+    std::filesystem::path fPath(filepath);
+    if(!std::filesystem::is_regular_file(fPath)){
+        std::cout << "Skipping non-regular file: " << filepath << "\n";
+        return;
+    }
     CompressedFile compressedFile = compressFile(filepath);
+
     // write the size of the uncompressed data to the file followed by a new
     // line
     blobFile << compressedFile.uncompressedSize << "\n";
-    blobFile << compressedFile.data;
+    blobFile.write((char *)compressedFile.data, compressedFile.compressedSize);
+    // blobFile << compressedFile.data;
 
     std::vector<std::string> indexVec;
     line = "";
     std::ifstream stagingFile(".juniper/index");
     bool brk = false;
+
     while (std::getline(stagingFile, line)) {
         indexVec.push_back(line);
     }
@@ -92,9 +89,6 @@ void addFile(std::string filepath) {
         indexVec.push_back(hash + " " + filepath);
     }
 
-    for(auto index : indexVec){
-        std::cout << index << "\n";
-    }
     {
         std::ofstream file(".juniper/index", std::ios::trunc);
         for (auto entry : indexVec) {

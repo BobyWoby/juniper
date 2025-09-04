@@ -3,8 +3,7 @@
 #include <string>
 #include "common.h"
 
-
-
 CompressedFile compressFile(std::string filepath);
+CompressedFile compressString(std::string str);
 void addFile(std::string filepath);
 void parseDir(std::string dirpath);

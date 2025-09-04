@@ -8,6 +8,7 @@
 #include "add.h"
 #include "init.h"
 #include "commit.h"
+#include "checkout.h"
 
 int main(int argc, char* argv[]) {
     srand(time(0));
@@ -15,8 +16,8 @@ int main(int argc, char* argv[]) {
     // std::cout << "Hello World!\n";
     // addFile("../src/main.cpp");
     if (argc < 1) return 1;
-    std::cout << argc << "\n";
-    std::cout << argv[1] << "\n";
+    // std::cout << argc << "\n";
+    // std::cout << argv[1] << "\n";
 
     if(!strcmp(argv[1], "init")){
         std::cout << "initializing juniper\n";
@@ -42,6 +43,23 @@ int main(int argc, char* argv[]) {
         std::string treeHash = commitIndex();
         std::string currentCommit = getCurrentCommit();
         createCommit(treeHash, currentCommit, msg);
+    }
+    if(!strcmp(argv[1], "checkout")){
+        if(argc <= 2){
+            std::cout << "Usage: juniper checkout commit-hash\n";
+            exit(1);
+        }
+        std::string hash = argv[2];
+        loadCommit(hash);
+    }
+
+    if(!strcmp(argv[1], "unblob")){
+        if(argc <= 3){
+            std::cout << "Usage: juniper unblob commit-hash filename\n";
+            exit(1);
+        }
+        std::string hash = argv[2];
+        unblob(hash);
     }
     return 0;
 }

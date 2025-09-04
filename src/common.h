@@ -6,6 +6,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <zlib.h>
 
 #define MAX_LENGTH 1024
 
@@ -44,8 +45,8 @@ inline std::string randomHash() {
 }
 
 struct CompressedFile{
-    unsigned long uncompressedSize, compressedSize;
-    unsigned char *data;
+    uLongf uncompressedSize, compressedSize;
+    Bytef *data;
 };
 
 inline std::string getCurrentCommit(){
