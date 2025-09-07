@@ -72,3 +72,8 @@ inline void updateHead(std::string newHash){
     std::ofstream ref(".juniper/" + loc, std::ios::trunc);
     ref << "ref " << newHash;
 }
+
+struct Commit{
+    Commit *parent;
+    std::string msg, hash;
+};

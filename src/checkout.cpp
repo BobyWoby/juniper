@@ -8,7 +8,6 @@
 #include "common.h"
 #include "zlib.h"
 
-
 std::string decompressString(const CompressedFile file) {
     uLongf decompressedSize = file.uncompressedSize;
     Bytef *decompressedData = new Bytef[decompressedSize];
@@ -21,9 +20,9 @@ std::string decompressString(const CompressedFile file) {
     }
 
     // std::cout << decompressedData << "\n";
-    return std::string(reinterpret_cast<char *>(decompressedData), decompressedSize);
+    return std::string(reinterpret_cast<char *>(decompressedData),
+                       decompressedSize);
 }
-
 
 void loadFile(std::string filepath, CompressedFile fileObj) {
     unsigned char *file =
@@ -41,12 +40,19 @@ void loadFile(std::string filepath, CompressedFile fileObj) {
         case Z_BUF_ERROR:
             std::cout << "Not enough buffer space!\n";
     }
-    std::cout << file << "\n";
+    // std::cout << file << "\n";
 
     // std::ofstream oFile(filepath);
     // oFile << file;
 }
 
+/**
+ * @brief Decompresses a given hashed object and returns the decompressed value
+ * as a string
+ *
+ * @param hash the object hash that you are trying to unblob
+ * @return decompressed string
+ */
 std::string unblob(std::string hash) {
     std::ifstream iFile(".juniper/objects/" + hash, std::ios::binary);
     std::string line = "";
@@ -55,48 +61,44 @@ std::string unblob(std::string hash) {
     std::getline(iFile, line);
     unsigned long uncompressedSize = std::stoi(line);
 
-    std::vector<unsigned char> dataBuf(std::istreambuf_iterator<char>(iFile), {});
+    std::vector<unsigned char> dataBuf(std::istreambuf_iterator<char>(iFile),
+                                       {});
     // std::cout << dataBuf.data() << "\n";
 
-    CompressedFile fileObj = {
-        .uncompressedSize = uncompressedSize,
-        .compressedSize = dataBuf.size(),
-        .data = dataBuf.data()};
+    CompressedFile fileObj = {.uncompressedSize = uncompressedSize,
+                              .compressedSize = dataBuf.size(),
+                              .data = dataBuf.data()};
 
     std::string decompressedStr = decompressString(fileObj);
-    std::cout << decompressedStr << "\n";
+    // std::cout << decompressedStr << "\n";
     return decompressedStr;
 }
 
 /**
- * @brief Loads the compressed file blob object
+ * @brief Loads the compressed file blob object into filepath
  *
- * @param hash
- * @param filepath
+ * @param hash the blob that you want to load
+ * @param filepath where to write the blob contents to
  */
 void loadHashedObject(std::string hash, std::string filepath) {
-    std::ifstream iFile(hash);
-    std::string line = "";
-    std::getline(iFile, line);
-    unsigned long uncompressedSize = std::stoi(line);
-    std::string data = "";
-    while (std::getline(iFile, line)) {
-        data += line;
-    }
-
-    unsigned char *dataPtr = new unsigned char[uncompressedSize]();
-    std::strcpy((char *)(dataPtr), data.c_str());
-    // std::strncpy(dataPtr, data.c_str(), uncompressedSize);
-
-    CompressedFile fileObj = {
-        .uncompressedSize = uncompressedSize,
-        .compressedSize = data.size(),
-        .data = reinterpret_cast<unsigned char *>(dataPtr)};
-
-    loadFile(filepath, fileObj);
+    std::string contents = unblob(hash);
+    std::ofstream file(filepath, std::ios::trunc);
+    file << contents;
 }
 
-void loadTree(std::string hash, std::string filepath) {}
+void loadTree(std::string hash, std::string dirpath) {
+    std::ifstream treeFile(".juniper/objects/" + hash);
+    std::string line;
+    while(std::getline(treeFile, line)){
+        std::vector<std::string> entryPieces = split(line, " ");
+        if(entryPieces.at(0) == "blob"){
+            // load the blob
+            loadHashedObject(entryPieces.at(1), dirpath + "/" + entryPieces.at(2));
+        }else if(entryPieces.at(0) == "tree"){
+            loadTree(entryPieces.at(1), dirpath + "/" + entryPieces.at(2));
+        }
+    }
+}
 
 void loadCommit(std::string hash) {
     // std::filesystem::path commitPath(".juniper/objects/" + hash);
@@ -108,8 +110,12 @@ void loadCommit(std::string hash) {
     std::ifstream treeFile(".juniper/objects/" + treeHash);
     std::getline(treeFile, line);
 
-    std::ifstream blobFile(".juniper/objects/" + line.substr(5, 40));
-
-    while (std::getline(blobFile, line)) {
-    }
+    std::vector<std::string> entryPieces = split(line, " ");
+    loadTree(entryPieces.at(1), entryPieces.at(2));
+    // while (std::getline(treeFile, line)) {
+    //     std::vector<std::string> entryPieces = split(line, " ");
+    //     if(entryPieces.at(0) == "blob" ){
+    //
+    //     }
+    // }
 }
