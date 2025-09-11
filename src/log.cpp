@@ -14,8 +14,13 @@ void logHead(){
     std::getline(refFile, line);
     std::string commit = line.substr(4, std::string::npos);
 
+    Commit root;
     std::ifstream commitFile(commit);
     while(std::getline(commitFile, line)){
+        auto parts = split(line, " ");
+        if(parts.at(0) == "commit"){
+            root.hash = parts.at(1);
+        }
     }
 }
 
@@ -57,6 +62,7 @@ Commit *traverseParents(Commit &previous){
     std::ifstream file(previous.hash);
     std::string line;
     Commit *commit;
+    commit->children.push_back(&previous);
     previous.parent = commit;
     std::getline(file, line);
     if(line.substr(0, 6) == "commit"){

@@ -75,5 +75,6 @@ inline void updateHead(std::string newHash){
 
 struct Commit{
     Commit *parent;
+    std::vector<Commit *> children;
     std::string msg, hash;
 };

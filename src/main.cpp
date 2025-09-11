@@ -9,6 +9,7 @@
 #include "init.h"
 #include "commit.h"
 #include "checkout.h"
+#include "log.h"
 
 int main(int argc, char* argv[]) {
     srand(time(0));
@@ -60,6 +61,9 @@ int main(int argc, char* argv[]) {
         }
         std::string hash = argv[2];
         unblob(hash);
+    }
+    if(!strcmp(argv[1], "log")){
+        logHead();
     }
     return 0;
 }
